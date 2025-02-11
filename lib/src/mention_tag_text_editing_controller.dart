@@ -4,10 +4,15 @@ import 'package:mention_tag_text_field/src/mention_tag_data.dart';
 import 'package:mention_tag_text_field/src/mention_tag_decoration.dart';
 import 'package:mention_tag_text_field/src/string_extensions.dart';
 
-class MentionTagTextEditingController extends TextEditingController {
-  MentionTagTextEditingController() {
+class MentionTagTextEditingController<T> extends TextEditingController {
+  MentionTagTextEditingController({
+    required this.toBackendConverter,
+  }) {
     addListener(_updateCursorPostion);
   }
+
+  /// Converts a taggable to a unique identifier for internal and backend use.
+  final String Function(T taggable) toBackendConverter;
 
   @override
   void dispose() {
@@ -28,11 +33,10 @@ class MentionTagTextEditingController extends TextEditingController {
   late int _cursorPosition;
   int? _indexMentionEnd;
 
-  final List<MentionTagElement> _mentions = [];
+  final List<MentionTagElement<T>> _mentions = [];
 
   /// Get the list of data associated with you mentions, if no data was given the mention labels will be returned.
-  List get mentions =>
-      List.from(_mentions.map((mention) => mention.data ?? mention.mention));
+  List<T> get mentions => List.from(_mentions.map((mention) => mention.data));
 
   /// Used to set initial text with mentions in it
   set setText(String newText) {
@@ -41,12 +45,25 @@ class MentionTagTextEditingController extends TextEditingController {
 
   /// Returns text with mentions in it
   String get getText {
-    final List<MentionTagElement> tempList = List.from(_mentions);
+    final List<MentionTagElement<T>> tempList = List.from(_mentions);
     return super.text.replaceAllMapped(Constants.mentionEscape, (match) {
-      final MentionTagElement removedMention = tempList.removeAt(0);
+      final MentionTagElement<T> removedMention = tempList.removeAt(0);
       final String mention = mentionTagDecoration.showMentionStartSymbol
           ? removedMention.mention
           : "${removedMention.mentionSymbol}${removedMention.mention}";
+      return mention;
+    });
+  }
+
+  /// Returns text with mentions in it
+  String get getBackendText {
+    final List<MentionTagElement<T>> tempList = List.from(_mentions);
+    return super.text.replaceAllMapped(Constants.mentionEscape, (match) {
+      final MentionTagElement<T> removedMention = tempList.removeAt(0);
+      final backendText = toBackendConverter(removedMention.data!);
+      final String mention = mentionTagDecoration.showMentionStartSymbol
+          ? backendText
+          : "${removedMention.mentionSymbol}$backendText";
       return mention;
     });
   }
@@ -68,7 +85,7 @@ class MentionTagTextEditingController extends TextEditingController {
   late MentionTagDecoration mentionTagDecoration;
   void Function(String?)? onMention;
 
-  set initialMentions(List<(String, Object?, Widget?)> value) {
+  set initialMentions(List<(String, T, Widget?)> value) {
     for (final mentionTuple in value) {
       if (!super.text.contains(mentionTuple.$1)) return;
       super.text =
@@ -84,7 +101,7 @@ class MentionTagTextEditingController extends TextEditingController {
           : mentionTuple.$1
               .removeMentionStart(mentionTagDecoration.mentionStart);
 
-      _mentions.add(MentionTagElement(
+      _mentions.add(MentionTagElement<T>(
           mentionSymbol: mentionSymbol,
           mention: mention,
           data: mentionTuple.$2,
@@ -102,7 +119,7 @@ class MentionTagTextEditingController extends TextEditingController {
   /// If you skip some values, mentioned labels will be added in those places.
   void addMention({
     required String label,
-    Object? data,
+    required T data,
     Widget? stylingWidget,
   }) {
     final indexCursor = selection.base.offset;
@@ -111,7 +128,7 @@ class MentionTagTextEditingController extends TextEditingController {
     final mention = mentionTagDecoration.showMentionStartSymbol
         ? "$mentionSymbol$label"
         : label;
-    final MentionTagElement mentionTagElement = MentionTagElement(
+    final MentionTagElement<T> mentionTagElement = MentionTagElement<T>(
         mentionSymbol: mentionSymbol,
         mention: mention,
         data: data,
@@ -245,7 +262,7 @@ class MentionTagTextEditingController extends TextEditingController {
     indexMentionEscape = indexCursor - indexMentionEscape - 1;
     final isCursorAtMention = (indexCursor - indexMentionEscape) == 1;
     if (isCursorAtMention) {
-      final MentionTagElement cursorMention =
+      final MentionTagElement<T> cursorMention =
           _mentions[mentionsCountTillCursor - 1];
       final mentionText = mentionTagDecoration.showMentionStartSymbol
           ? cursorMention.mention

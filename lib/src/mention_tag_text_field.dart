@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:mention_tag_text_field/src/mention_tag_decoration.dart';
 import 'package:mention_tag_text_field/src/mention_tag_text_editing_controller.dart';
 
-class MentionTagTextField extends TextField {
+class MentionTagTextField<T> extends TextField {
   MentionTagTextField({
     super.key,
     TextEditingController? controller,
@@ -83,7 +83,7 @@ class MentionTagTextField extends TextField {
   }) : super(
             controller: controller,
             onChanged: (value) {
-              if (controller is MentionTagTextEditingController?) {
+              if (controller is MentionTagTextEditingController<T>?) {
                 try {
                   controller?.onChanged(value);
                   onChanged?.call(value);
@@ -95,7 +95,7 @@ class MentionTagTextField extends TextField {
                 onChanged?.call(value);
               }
             }) {
-    if (controller is MentionTagTextEditingController?) {
+    if (controller is MentionTagTextEditingController<T>?) {
       _setControllerProperties(controller, initialMentions);
     }
   }
@@ -113,7 +113,7 @@ class MentionTagTextField extends TextField {
   ///
   /// Note: While setting initialMentions you must provide mention symbol associated with each mention. For example, ("@rowan", null) is a valid tuple and ("rowan", null) will be ignored.
   /// You don't need to add mention symbol later when setting mentions during editing using _controller.setMention, you can do _controller.setMention("rowan", null) and corresponding mention symbol will be added automatically.
-  final List<(String, Object?, Widget?)> initialMentions;
+  final List<(String, T, Widget?)> initialMentions;
 
   static Widget _defaultContextMenuBuilder(
       BuildContext context, EditableTextState editableTextState) {
@@ -123,8 +123,8 @@ class MentionTagTextField extends TextField {
   }
 
   void _setControllerProperties(
-      MentionTagTextEditingController? mentionController,
-      List<(String, Object?, Widget?)> initialMentions) {
+      MentionTagTextEditingController<T>? mentionController,
+      List<(String, T, Widget?)> initialMentions) {
     if (mentionController == null) return;
     mentionController.mentionTagDecoration = mentionTagDecoration;
     mentionController.onMention = onMention;
@@ -132,7 +132,7 @@ class MentionTagTextField extends TextField {
   }
 }
 
-class MentionTagTextFormField extends TextFormField {
+class MentionTagTextFormField<T> extends TextFormField {
   MentionTagTextFormField({
     super.key,
     TextEditingController? controller,
@@ -213,7 +213,7 @@ class MentionTagTextFormField extends TextFormField {
   }) : super(
             controller: controller,
             onChanged: (value) {
-              if (controller is MentionTagTextEditingController?) {
+              if (controller is MentionTagTextEditingController<T>?) {
                 try {
                   controller?.onChanged(value);
                   onChanged?.call(value);
@@ -225,7 +225,7 @@ class MentionTagTextFormField extends TextFormField {
                 onChanged?.call(value);
               }
             }) {
-    if (controller is MentionTagTextEditingController?) {
+    if (controller is MentionTagTextEditingController<T>?) {
       _setControllerProperties(controller, initialMentions);
     }
   }
@@ -243,7 +243,7 @@ class MentionTagTextFormField extends TextFormField {
   ///
   /// Note: While setting initialMentions you must provide mention symbol associated with each mention. For example, ("@rowan", null) is a valid tuple and ("rowan", null) will be ignored.
   /// You don't need to add mention symbol later when setting mentions during editing using _controller.setMention, you can do _controller.setMention("rowan", null) and corresponding mention symbol will be added automatically.
-  final List<(String, Object?, Widget?)> initialMentions;
+  final List<(String, T, Widget?)> initialMentions;
 
   static Widget _defaultContextMenuBuilder(
       BuildContext context, EditableTextState editableTextState) {
@@ -253,8 +253,8 @@ class MentionTagTextFormField extends TextFormField {
   }
 
   void _setControllerProperties(
-      MentionTagTextEditingController? mentionController,
-      List<(String, Object?, Widget?)> initialMentions) {
+      MentionTagTextEditingController<T>? mentionController,
+      List<(String, T, Widget?)> initialMentions) {
     if (mentionController == null) return;
     mentionController.mentionTagDecoration = mentionTagDecoration;
     mentionController.onMention = onMention;

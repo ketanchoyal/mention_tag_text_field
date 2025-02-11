@@ -81,7 +81,7 @@ extension StringExtensions on String {
     }
 
     if (indexToRemove != -1) {
-      return substring(0, indexToRemove) + substring(indexToRemove + 1);
+      return substring(0, indexToRemove).trim() + substring(indexToRemove + 1);
     }
 
     return this;
